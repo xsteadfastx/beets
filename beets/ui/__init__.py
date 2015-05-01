@@ -1158,7 +1158,7 @@ def path_option(f):
                         help='print paths for matched items or albums')(f)
 
 
-def format_option(target=None):
+def format_option(flags=('-f', '--format'), target=None):
     def callback(ctx, param, value):
         if not value:
             return
@@ -1182,10 +1182,8 @@ def format_option(target=None):
                 _set_format(library.Album, value)
 
     def decorator(f):
-        return click.option(
-            '-f', '--format', callback=callback,
-            expose_value=False, help='print with custom format'
-        )(f)
+        return click.option(*flags, callback=callback, expose_value=False,
+                            help='print with custom format')(f)
 
     return decorator
 
@@ -1205,6 +1203,8 @@ pass_context = click.make_pass_decorator(Context, ensure=True)
 
 @click.command(cls=BeetsCLI,
                context_settings={'help_option_names': ['-h', '--help']})
+@format_option(flags=('--format-item',), target=library.Item)
+@format_option(flags=('--format-album',), target=library.Album)
 @click.option('-l', '--library', metavar='LIBRARY',
               help='Library database file to use.')
 @click.option('-d', '--directory', metavar='DIRECTORY',
