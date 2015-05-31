@@ -42,6 +42,7 @@ from tempfile import mkdtemp, mkstemp
 from contextlib import contextmanager
 from StringIO import StringIO
 from enum import Enum
+import click.testing
 
 import beets
 from beets import logging
@@ -405,21 +406,29 @@ class TestHelper(object):
 
     # Running beets commands
 
-    def run_command(self, *args):
-        if hasattr(self, 'lib'):
-            lib = self.lib
+    def get_click_runner(self, setup_ctx=True):
+        runner = click.testing.CliRunner(charset='utf-8')
+        if setup_ctx:
+            ctx = beets.ui.Context(
+                lib=getattr(self, 'lib') or Library(':memory:')
+            )
         else:
-            lib = Library(':memory:')
-        ctx = beets.ui.Context(lib=lib)
-        try:
-            beets.ui._raw_main(args=args, obj=ctx)
-        except SystemExit:
-            pass
+            ctx = None
 
+        def invoke(args, **kwargs):
+            rv = runner.invoke(beets.ui._raw_main, args=args, obj=ctx,
+                               catch_exceptions=False, **kwargs)
+            return rv
+
+        return invoke
+
+
+    # XXX: compat
     def run_with_output(self, *args):
-        with capture_stdout() as out:
-            self.run_command(*args)
-        return out.getvalue().decode('utf-8')
+        invoke = self.get_click_runner()
+        return invoke(args).output
+
+    run_command = run_with_output
 
     # Safe file operations
 
