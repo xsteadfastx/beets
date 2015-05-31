@@ -1016,9 +1016,8 @@ def _configure(options):
     # Add any additional config files specified with --config. This
     # special handling lets specified plugins get loaded before we
     # finish parsing the command line.
-    if options.get('config') is not None:
-        config_path = options['config']
-        del options['config']
+    config_path = options.pop('config', None)
+    if config_path is not None:
         config.set_file(config_path)
     config.set_args(options)
 
