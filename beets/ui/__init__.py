@@ -778,8 +778,20 @@ class CommonOptionsParser(optparse.OptionParser, object):
 class ClickSubcommand(click.Command):
     def __init__(self, *args, **kwargs):
         aliases = kwargs.pop('aliases', ())
-        click.Command.__init__(self, *args, **kwargs)
+        self._help = ''
         self.aliases = aliases
+        click.Command.__init__(self, *args, **kwargs)
+
+    @property
+    def help(self):
+        return self._help
+
+    @help.setter
+    def help(self, value):
+        value = value or ''
+        if self.aliases:
+            value += '\n\nCommand aliases: {}'.format(' '.join(self.aliases))
+        self._help = value
 
 
 class Subcommand(object):
@@ -1094,6 +1106,7 @@ def _open_library(config):
 class BeetsCLI(click.MultiCommand):
 
     def _commands(self, ctx):
+        # FIXME: Awful performance, cache per ctx
         from beets.ui.commands import default_commands
 
         config = _configure(ctx.params)
@@ -1102,14 +1115,22 @@ class BeetsCLI(click.MultiCommand):
         subcommands = list(default_commands)
         subcommands.extend(plugins.commands())
 
-        return {
-            cmd.name: cmd
-            for cmd in subcommands
-            if isinstance(cmd, click.Command)
-        }
+        rv = {}
+
+        for command in subcommands:
+            if not isinstance(command, click.Command):
+                continue
+            assert isinstance(command, ClickSubcommand)
+
+            rv[command.name] = command
+            for alias in command.aliases:
+                rv[alias] = command
+
+        return rv
 
     def list_commands(self, ctx):
-        return self._commands(ctx).keys()
+        # Skip aliases for help page
+        return set(command.name for command in self._commands(ctx).values())
 
     def get_command(self, ctx, name):
         # Special case for the `config --edit` command: bypass loading config

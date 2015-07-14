@@ -864,8 +864,8 @@ def import_files(lib, paths, query):
     plugins.send('import', lib=lib, paths=paths)
 
 
-# TODO: add 'imp' and 'im' aliases
-@default_command('import', short_help='import new music')
+@default_command('import', aliases=('imp', 'im'),
+                 short_help='import new music')
 @click.option('-c/-C', '--copy/--nocopy', default=None,
               help='copy tracks into library directory')
 @click.option('-w/-W', '--write/--nowrite', default=None,
@@ -931,8 +931,7 @@ def list_items(lib, query, album, fmt=''):
             ui.print_(format(item, fmt))
 
 
-# TODO: add 'ls' alias
-@default_command('list', short_help='query the library')
+@default_command('list', aliases=('ls',), short_help='query the library')
 @click.argument('query', nargs=-1)
 @ui.all_common_options
 @ui.pass_context
@@ -1032,8 +1031,8 @@ def update_items(lib, query, album, move, pretend):
                 album.move()
 
 
-# TODO: add 'up' and 'upd' aliases
-@default_command('update', short_help='update the library')
+@default_command('update', aliases=('up', 'upd'),
+                 short_help='update the library')
 @ui.album_option
 @ui.format_option()
 @click.option('move', '-M', '--nomove', is_flag=True, default=True,
@@ -1083,8 +1082,8 @@ def remove_items(lib, query, album, delete):
             obj.remove(delete)
 
 
-# TODO: add 'rm' alias
-@default_command('remove', short_help='remove matching items from the library')
+@default_command('remove', aliases=('rm',),
+                 short_help='remove matching items from the library')
 @click.option('-d', '--delete', is_flag=True,
               help='also remove files from disk')
 @ui.album_option
@@ -1251,8 +1250,8 @@ def modify_parse_args(args):
     return query, mods, dels
 
 
-# TODO: add 'mod' alias
-@default_command('modify', short_help='change metadata fields')
+@default_command('modify', aliases=('mod',),
+                 short_help='change metadata fields')
 @click.option('move', '-M', '--nomove', is_flag=True, default=True,
               help="don't move files in library")
 @click.option('write', '-w', '--write', flag_value=True,
@@ -1305,8 +1304,7 @@ def move_items(lib, dest, query, copy, album, pretend):
             obj.store()
 
 
-# TODO: add 'mv' alias
-@default_command('move', short_help='move or copy items')
+@default_command('move', aliases=('mv',), short_help='move or copy items')
 @click.option('-d', '--dest', metavar='DIR', help='destination directory')
 @click.option('-c', '--copy', is_flag=True, help='copy instead of moving')
 @click.option('-p', '--pretend', is_flag=True,
