@@ -774,6 +774,14 @@ class CommonOptionsParser(optparse.OptionParser, object):
 # succinct example program.
 
 
+# FIXME: kill original Subcommand in favor of this
+class ClickSubcommand(click.Command):
+    def __init__(self, *args, **kwargs):
+        aliases = kwargs.pop('aliases', ())
+        click.Command.__init__(self, *args, **kwargs)
+        self.aliases = aliases
+
+
 class Subcommand(object):
     """A subcommand of a root command-line application that may be
     invoked by a SubcommandOptionParser.

@@ -25,7 +25,7 @@ import re
 
 import beets
 from beets import ui
-from beets.ui import print_, input_, decargs, show_path_changes
+from beets.ui import ClickSubcommand, print_, input_, decargs, show_path_changes
 from beets import autotag
 from beets.autotag import Recommendation
 from beets.autotag import hooks
@@ -43,9 +43,14 @@ VARIOUS_ARTISTS = u'Various Artists'
 # Global logger.
 log = logging.getLogger('beets')
 
-# The list of default subcommands. This is populated with Subcommand
-# objects that can be fed to a SubcommandsOptionParser.
+# The list of default subcommands. This is populated with click command objects
+# which are later attached to a click group
 default_commands = []
+
+def default_command(name=None, **kwargs):
+    rv = click.command(name, cls=ClickSubcommand, **kwargs)
+    default_commands.append(rv)
+    return rv
 
 
 # Utilities.
@@ -78,7 +83,7 @@ def _do_query(lib, query, album, also_items=True):
 
 # fields: Shows a list of available fields for queries and format strings.
 
-@click.command(
+@default_command(
     'fields',
     short_help='show fields available for queries and format strings',
 )
@@ -106,7 +111,7 @@ default_commands.append(fields_cmd)
 
 # help: Print help text for commands
 
-@click.command('help',
+@default_command('help',
                short_help='give detailed help on a specific sub-command')
 @click.pass_context
 def help_cmd(ctx):
@@ -860,7 +865,7 @@ def import_files(lib, paths, query):
 
 
 # TODO: add 'imp' and 'im' aliases
-@click.command('import', short_help='import new music')
+@default_command('import', short_help='import new music')
 @click.option('-c/-C', '--copy/--nocopy', default=None,
               help='copy tracks into library directory')
 @click.option('-w/-W', '--write/--nowrite', default=None,
@@ -927,7 +932,7 @@ def list_items(lib, query, album, fmt=''):
 
 
 # TODO: add 'ls' alias
-@click.command('list', short_help='query the library')
+@default_command('list', short_help='query the library')
 @click.argument('query', nargs=-1)
 @ui.all_common_options
 @ui.pass_context
@@ -1028,7 +1033,7 @@ def update_items(lib, query, album, move, pretend):
 
 
 # TODO: add 'up' and 'upd' aliases
-@click.command('update', short_help='update the library')
+@default_command('update', short_help='update the library')
 @ui.album_option
 @ui.format_option()
 @click.option('move', '-M', '--nomove', is_flag=True, default=True,
@@ -1079,7 +1084,7 @@ def remove_items(lib, query, album, delete):
 
 
 # TODO: add 'rm' alias
-@click.command('remove', short_help='remove matching items from the library')
+@default_command('remove', short_help='remove matching items from the library')
 @click.option('-d', '--delete', is_flag=True,
               help='also remove files from disk')
 @ui.album_option
@@ -1094,7 +1099,7 @@ default_commands.append(remove_cmd)
 
 # stats: Show library/query statistics.
 
-@click.command('stats',
+@default_command('stats',
                short_help='show statistics about the library or a query')
 @click.option('-e', '--exact', is_flag=True, help='exact size and time')
 @click.argument('query', nargs=-1)
@@ -1148,7 +1153,7 @@ default_commands.append(stats_cmd)
 
 # version: Show current beets version.
 
-@click.command('version', short_help='output version information')
+@default_command('version', short_help='output version information')
 def version_cmd():
     print_('beets version %s' % beets.__version__)
     # Show plugins.
@@ -1247,7 +1252,7 @@ def modify_parse_args(args):
 
 
 # TODO: add 'mod' alias
-@click.command('modify', short_help='change metadata fields')
+@default_command('modify', short_help='change metadata fields')
 @click.option('move', '-M', '--nomove', is_flag=True, default=True,
               help="don't move files in library")
 @click.option('write', '-w', '--write', flag_value=True,
@@ -1301,7 +1306,7 @@ def move_items(lib, dest, query, copy, album, pretend):
 
 
 # TODO: add 'mv' alias
-@click.command('move', short_help='move or copy items')
+@default_command('move', short_help='move or copy items')
 @click.option('-d', '--dest', metavar='DIR', help='destination directory')
 @click.option('-c', '--copy', is_flag=True, help='copy instead of moving')
 @click.option('-p', '--pretend', is_flag=True,
@@ -1350,7 +1355,7 @@ def write_items(lib, query, pretend, force):
             item.try_sync()
 
 
-@click.command('write', short_help='write tag information to files')
+@default_command('write', short_help='write tag information to files')
 @click.option('-p', '--pretend', is_flag=True,
               help='show all changes but do nothing')
 @click.option('-f', '--force', is_flag=True,
@@ -1389,7 +1394,7 @@ def config_edit(ctx, param, value):
         raise ui.UserError(message)
 
 
-@click.command('config', short_help='show or edit the user configuration')
+@default_command('config', short_help='show or edit the user configuration')
 @click.option('-p', '--paths', is_flag=True,
               help='Show files that configuration was loaded from.')
 @click.option('-e', '--edit', is_flag=True, callback=config_edit,
@@ -1530,4 +1535,4 @@ completion_cmd = ui.Subcommand(
 )
 completion_cmd.func = print_completion
 completion_cmd.hide = True
-default_commands.append(completion_cmd)
+#default_commands.append(completion_cmd)  # FIXME
