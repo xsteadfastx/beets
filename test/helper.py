@@ -422,7 +422,6 @@ class TestHelper(object):
 
         return invoke
 
-
     # XXX: compat
     def run_with_output(self, *args):
         invoke = self.get_click_runner()
