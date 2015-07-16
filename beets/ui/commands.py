@@ -50,9 +50,13 @@ default_commands = []
 
 
 def default_command(name=None, **kwargs):
-    rv = click.command(name, cls=ClickSubcommand, **kwargs)
-    default_commands.append(rv)
-    return rv
+    orig_decorator = click.command(name, cls=ClickSubcommand, **kwargs)
+    def decorator(f):
+        rv = orig_decorator(f)
+        default_commands.append(rv)
+        return rv
+
+    return decorator
 
 
 # Utilities.
@@ -108,9 +112,6 @@ def fields_cmd(ctx):
     _print_rows(pfs)
 
 
-default_commands.append(fields_cmd)
-
-
 # help: Print help text for commands
 
 @default_command('help',
@@ -129,7 +130,6 @@ def help_cmd(ctx):
         print_(ctx_.get_help())
 
 help_cmd.allow_extra_args = True
-default_commands.append(help_cmd)
 
 
 # import: Autotagger and importer.
@@ -916,9 +916,6 @@ def import_cmd(ctx, query, **opts):
     import_files(ctx.lib, paths, query)
 
 
-default_commands.append(import_cmd)
-
-
 # list: Query and show library contents.
 
 def list_items(lib, query, album, fmt=''):
@@ -939,9 +936,6 @@ def list_items(lib, query, album, fmt=''):
 @ui.pass_context
 def list_cmd(ctx, query, album, path):
     list_items(ctx.lib, query, album)
-
-
-default_commands.append(list_cmd)
 
 
 # update: Update library contents according to on-disk tags.
@@ -1047,9 +1041,6 @@ def update_cmd(ctx, query, album, move, pretend):
     update_items(ctx.lib, query, album, move, pretend)
 
 
-default_commands.append(update_cmd)
-
-
 # remove: Remove items from library, delete files.
 
 def remove_items(lib, query, album, delete):
@@ -1093,9 +1084,6 @@ def remove_items(lib, query, album, delete):
 @ui.pass_context
 def remove_cmd(ctx, query, album, delete):
     remove_items(ctx.lib, query, album, delete)
-
-
-default_commands.append(remove_cmd)
 
 
 # stats: Show library/query statistics.
@@ -1149,9 +1137,6 @@ Album artists: {7}""".format(
     )
 
 
-default_commands.append(stats_cmd)
-
-
 # version: Show current beets version.
 
 @default_command('version', short_help='output version information')
@@ -1163,9 +1148,6 @@ def version_cmd():
         print_('plugins:', ', '.join(names))
     else:
         print_('no plugins loaded')
-
-
-default_commands.append(version_cmd)
 
 
 # modify: Declaratively change metadata.
@@ -1274,9 +1256,6 @@ def modify_cmd(ctx, query, write, move, album, yes):
     modify_items(ctx.lib, mods, dels, query, write, move, album, not yes)
 
 
-default_commands.append(modify_cmd)
-
-
 # move: Move/copy files to the library or a new base directory.
 
 def move_items(lib, dest, query, copy, album, pretend):
@@ -1323,9 +1302,6 @@ def move_cmd(ctx, dest, query, copy, pretend, album):
     move_items(ctx.lib, dest, query, copy, album, pretend)
 
 
-default_commands.append(move_cmd)
-
-
 # write: Write tags into files.
 
 def write_items(lib, query, pretend, force):
@@ -1364,9 +1340,6 @@ def write_items(lib, query, pretend, force):
 @ui.pass_context
 def write_cmd(ctx, query, pretend, force):
     write_items(ctx.lib, query, pretend, force)
-
-
-default_commands.append(write_cmd)
 
 
 # config: Show and edit user configuration.
@@ -1432,9 +1405,6 @@ def config_cmd(*args, **opts):
     # Dump configuration.
     else:
         print_(config.dump(full=opts['defaults'], redact=opts['redact']))
-
-
-default_commands.append(config_cmd)
 
 
 # completion: print completion script
