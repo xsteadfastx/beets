@@ -894,7 +894,7 @@ def import_files(lib, paths, query):
               help='group tracks in a folder into separate albums')
 @click.option('--pretend', is_flag=True, default=None,
               help='just print the files to import')
-@click.argument('query', nargs=-1)
+@click.argument('query', nargs=-1)  # FIXME: best name?
 @ui.pass_context
 def import_cmd(ctx, query, **opts):
     config['import'].set_args(opts)
@@ -908,8 +908,8 @@ def import_cmd(ctx, query, **opts):
         query = decargs(query)
         paths = []
     else:
-        query = None
         paths = query
+        query = None
         if not paths:
             raise ui.UserError('no path specified')
 
