@@ -121,11 +121,11 @@ class EmbyUpdate(BeetsPlugin):
         self._log.info('Updating Emby library...')
 
         try:
+            self._log.info('Updating Emby library...')
             update_emby(config['emby']['host'].get(),
                         config['emby']['port'].get(),
                         config['emby']['username'].get(),
                         config['emby']['password'].get())
-            self._log.info('... started.')
 
         except requests.exceptions.RequestException:
             self._log.warning('Update failed.')

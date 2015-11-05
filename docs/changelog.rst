@@ -32,6 +32,13 @@ Fixes:
   iTunes. :bug:`1700`
 * :doc:`/plugins/duplicates`: Fix a crash when merging items. :bug:`1699`
 
+The new features are:
+
+* A new :doc:`/plugins/embyupdate` lets you notify a `Emby`_ server when the
+  database changes.
+
+.. _Emby: http://emby.media/
+
 
 1.3.15 (October 17, 2015)
 -------------------------
