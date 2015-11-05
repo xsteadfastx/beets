@@ -59,6 +59,8 @@ def create_headers(user_id, token=None):
 
 
 def get_token(host, port, headers, auth_data):
+    """Return token for a user.
+    """
     url = api_url(host, port, '/Users/AuthenticateByName')
     r = requests.post(url, headers=headers, data=auth_data)
 
@@ -82,7 +84,6 @@ def update_emby(host, port, username, password):
     """Sends request to Emby API to start a library refresh.
     """
     url = api_url(host, port, '/Library/Refresh')
-    token = None
 
     user = get_user(host, port, username)
 
@@ -121,7 +122,9 @@ class EmbyUpdate(BeetsPlugin):
 
         try:
             update_emby(config['emby']['host'].get(),
-                        config['emby']['port'].get())
+                        config['emby']['port'].get(),
+                        config['emby']['username'].get(),
+                        config['emby']['password'].get())
             self._log.info('... started.')
 
         except requests.exceptions.RequestException:
