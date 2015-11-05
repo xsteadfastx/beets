@@ -58,10 +58,9 @@ def create_headers(user_id, token=None):
     return headers
 
 
-def get_token(host, port, username, password):
+def get_token(host, port, headers, auth_data):
     url = api_url(host, port, '/Users/AuthenticateByName')
-    r = requests.post(url, headers=create_headers(get_user(username)['Id']),
-                      data=password_data(username, password))
+    r = requests.post(url, headers=headers, data=auth_data)
 
     return r.json()['AccessToken']
 
@@ -74,15 +73,28 @@ def get_user(host, port, username):
     user = [i for i in r.json() if i['Name'] == username]
 
     if user:
-        return user
+        return user[0]
     else:
-        return None
+        raise ValueError('User not found.')
 
 
-def update_emby(host, port, username=None, password=None):
+def update_emby(host, port, username, password):
     """Sends request to Emby API to start a library refresh.
     """
     url = api_url(host, port, '/Library/Refresh')
+    token = None
+
+    user = get_user(host, port, username)
+
+    auth_data = password_data(username, password)
+    headers = create_headers(user['Id'])
+    token = get_token(host, port, headers, auth_data)
+    headers = create_headers(user['Id'], token=token)
+
+    # Do the update
+    r = requests.post(url, headers=headers)
+    if r.status_code != 204:
+        raise requests.exceptions.RequestException
 
 
 class EmbyUpdate(BeetsPlugin):
