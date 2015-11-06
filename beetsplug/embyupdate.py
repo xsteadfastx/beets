@@ -64,7 +64,7 @@ def get_token(host, port, headers, auth_data):
     url = api_url(host, port, '/Users/AuthenticateByName')
     r = requests.post(url, headers=headers, data=auth_data)
 
-    return r.json()['AccessToken']
+    return r.json().get('AccessToken')
 
 
 def get_user(host, port, username):
@@ -74,28 +74,7 @@ def get_user(host, port, username):
     r = requests.get(url)
     user = [i for i in r.json() if i['Name'] == username]
 
-    if user:
-        return user[0]
-    else:
-        raise ValueError('User not found.')
-
-
-def update_emby(host, port, username, password):
-    """Sends request to Emby API to start a library refresh.
-    """
-    url = api_url(host, port, '/Library/Refresh')
-
-    user = get_user(host, port, username)
-
-    auth_data = password_data(username, password)
-    headers = create_headers(user['Id'])
-    token = get_token(host, port, headers, auth_data)
-    headers = create_headers(user['Id'], token=token)
-
-    # Do the update
-    r = requests.post(url, headers=headers)
-    if r.status_code != 204:
-        raise requests.exceptions.RequestException
+    return user
 
 
 class EmbyUpdate(BeetsPlugin):
@@ -118,14 +97,37 @@ class EmbyUpdate(BeetsPlugin):
     def update(self, lib):
         """When the client exists try to send refresh request to Emby.
         """
-        self._log.info('Updating Emby library...')
+        self._log.info(u'Updating Emby library...')
 
-        try:
-            self._log.info('Updating Emby library...')
-            update_emby(config['emby']['host'].get(),
-                        config['emby']['port'].get(),
-                        config['emby']['username'].get(),
-                        config['emby']['password'].get())
+        host = config['emby']['host'].get()
+        port = config['emby']['port'].get()
+        username = config['emby']['username'].get()
+        password = config['emby']['password'].get()
 
-        except requests.exceptions.RequestException:
-            self._log.warning('Update failed.')
+        # Get user information from the Emby API.
+        user = get_user(host, port, username)
+        if not user:
+            self._log.warning(u'User {} could not be found.'.format(username))
+            return
+
+        # Create Authentication data and headers.
+        auth_data = password_data(username, password)
+        headers = create_headers(user[0]['Id'])
+
+        # Get authentication token.
+        token = get_token(host, port, headers, auth_data)
+        if not token:
+            self._log.warning(
+                u'Couldnt not get token for user {}'.format(username))
+            return
+
+        # Recreate headers with a token.
+        headers = create_headers(user[0]['Id'], token=token)
+
+        # Trigger the Update.
+        url = api_url(host, port, '/Library/Refresh')
+        r = requests.post(url, headers=headers)
+        if r.status_code != 204:
+            self._log.warning(u'Update could not be triggered')
+        else:
+            self._log.info(u'Update triggered.')
